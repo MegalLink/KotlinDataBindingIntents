@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">BasicsKotlin</string>
+    <string name="image_hero_description">Hero Profile Photo</string>
+    <string name="title_bio">Bio</string>
+    <string name="title_power">Power</string>
+    <string name="title_alter">Alter Ego</string>
+    <string name="title_hero_name">Hero Name</string>
+    <string name="small_biography">Small Hero Biography</string>
+    <string name="btn_save">Save</string>
+</resources>
