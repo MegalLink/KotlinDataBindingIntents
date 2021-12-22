@@ -1,5 +1,6 @@
 package com.example.basicskotlin
 
+import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.basicskotlin.databinding.ActivityDetailBinding
@@ -7,6 +8,7 @@ import com.example.basicskotlin.databinding.ActivityDetailBinding
 class DetailActivity : AppCompatActivity() {
     companion object{
         const val HERO_KEY="hero"
+        const val IMAGE_KEY="bitmap"
     }
     private lateinit var binding:ActivityDetailBinding
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,10 +18,8 @@ class DetailActivity : AppCompatActivity() {
 
         val bundle = intent.extras!!
         val hero=bundle.getParcelable<Hero>(HERO_KEY)!!
-
-        binding.tvHeroName.text=hero.name
-        binding.tvAlter.text=hero.alter
-        binding.tvBio.text=hero.bio
-        binding.rbPower.rating=hero.power
+        val bitmap=bundle.getParcelable<Bitmap>(IMAGE_KEY)!!
+        binding.hero=hero
+        binding.ivHero.setImageBitmap(bitmap)
     }
 }
