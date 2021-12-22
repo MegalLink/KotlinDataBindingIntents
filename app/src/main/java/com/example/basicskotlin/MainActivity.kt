@@ -1,31 +1,41 @@
 package com.example.basicskotlin
 
-import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.graphics.drawable.toBitmap
 import com.example.basicskotlin.databinding.ActivityMainBinding
+import android.os.Environment
+import java.io.File
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import androidx.core.content.FileProvider
+
 
 class MainActivity : AppCompatActivity() {
-    companion object{
-       const val CAMERA_INTENT_RC=1000
-    }
-    //late init le prometemos a kotlin que cuando se usea la variable ya va a tener un valor, osea que debemos asignarle un valor si o si despues
+
+    //late init le prometemos a kotlin que cuando se usea la variable ya va a tener un valor, osea que debemos asignarle un valor si o si en onCreate
     private lateinit var binding: ActivityMainBinding
     private lateinit var heroImage:ImageView
+    private var picturePath = ""
+    //Ejecutar camara
+    private val getCameraBitmap= registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+       if(success&&picturePath.isNotEmpty()){
+           val heroBitmap=BitmapFactory.decodeFile(picturePath)
+           heroImage.setImageBitmap(heroBitmap)
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding= ActivityMainBinding.inflate(layoutInflater) //inflar o formar layout a partir de main binding y guardar todo en binding
         setContentView(binding.root)
 
+        //Set on create
         heroImage=binding.ivAvatar
         setListeners()
-
     }
 
     private fun setListeners(){
@@ -44,9 +54,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openCamera() {
-        //Implicit Intent abri camara
-        val cameraIntent=Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        startActivityForResult(cameraIntent, CAMERA_INTENT_RC)
+        val file=createImageFile()
+        val uri= if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+           //VERSION NUEVA necesita permisos para guardar la foto en android manifest se envia lo de meta-data $packageName.provider
+            FileProvider.getUriForFile(this,"com.example.basicskotlin.provider",file)
+        }else{
+            //VERSION VIEJA
+            Uri.fromFile(file)
+        }
+        getCameraBitmap.launch(uri)
+    }
+
+    private fun createImageFile(): File {
+        val fileName = "hero_image"
+        //getExternalFilesDir use provider_paths.xml
+        val fileDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val file=File.createTempFile(fileName, ".jpg", fileDirectory)
+        picturePath=file.absolutePath
+        return file
     }
 
     private fun openDetailActivity(hero:Hero){
@@ -54,16 +79,8 @@ class MainActivity : AppCompatActivity() {
         //Explicit intent es cuando sabemos que intent vamos a abrir
         val intent= Intent(this,DetailActivity::class.java)
         intent.putExtra(DetailActivity.HERO_KEY,hero)
-        intent.putExtra(DetailActivity.IMAGE_KEY,heroImage.drawable.toBitmap())
+        Log.d("openDetailActivity",picturePath)
+        intent.putExtra(DetailActivity.IMAGE_KEY,picturePath)
         startActivity(intent)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode==Activity.RESULT_OK && requestCode== CAMERA_INTENT_RC){
-            val extras=data?.extras;
-            val heroBitmap=extras?.getParcelable<Bitmap>("data")
-            heroImage.setImageBitmap(heroBitmap)
-        }
     }
 }
